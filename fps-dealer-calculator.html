@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPS Dealer मासिक चालान कैलकुलेटर — Rice &amp; Wheat</title>
+<style>
+  :root{
+    --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+    --green:#15803d; --greenbg:#dcfce7; --amber:#b45309; --amberbg:#fef3c7;
+    --blue:#1d4ed8; --bluebg:#dbeafe; --red:#b91c1c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Segoe UI",system-ui,"Noto Sans Devanagari",Arial,sans-serif;
+    background:linear-gradient(180deg,#0f172a 0,#1e293b 250px,#f1f5f9 250px,#f1f5f9 100%);
+    color:var(--ink); padding:0 0 60px;
+  }
+  header{color:#fff;padding:24px 16px 30px;text-align:center}
+  header h1{margin:0 0 6px;font-size:23px}
+  header p{margin:0;color:#cbd5e1;font-size:14px}
+  .wrap{max-width:1250px;margin:0 auto;padding:0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,23,42,.06)}
+  .card h2{margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .badge{font-size:12px;background:var(--bluebg);color:var(--blue);border-radius:999px;padding:3px 10px;font-weight:600}
+  .badge.g{background:var(--greenbg);color:var(--green)}
+  .dealers{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .dealer-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .dealer-head input{flex:1}
+  input[type=text],input[type=number],select{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;background:#fff}
+  input[type=number]{text-align:right}
+  input:focus,select:focus{outline:2px solid #93c5fd;border-color:#3b82f6}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 8px;text-align:right}
+  th{background:#f8fafc;font-weight:600;text-align:center}
+  td.lbl,th.lbl{text-align:left}
+  .grp{background:#f1f5f9;font-weight:700;text-align:left}
+  .sub td{background:#f8fafc;font-weight:700}
+  .tot td{background:var(--greenbg);font-weight:700;color:#14532d}
+  .grand td{background:#fef9c3;font-weight:800;font-size:14.5px}
+  .pos{color:var(--green);font-weight:700}
+  .neg{color:var(--red);font-weight:700}
+  .zero{color:var(--muted);font-weight:600}
+  .btn{border:0;border-radius:9px;padding:9px 14px;font-size:13.5px;cursor:pointer;font-weight:600;font-family:inherit;background:#1d4ed8;color:#fff}
+  .btn.gray{background:#475569}.btn.green{background:#15803d}.btn.red{background:#b91c1c}
+  .btn.ghost{background:#e2e8f0;color:#0f172a}.btn.amber{background:#b45309}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.sm{padding:6px 10px;font-size:12.5px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .note{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:12px}
+  .kpi{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .kpi span{display:block;font-size:12px;color:var(--muted)}
+  .kpi b{font-size:17px}
+  .warn{background:var(--amberbg);color:var(--amber);border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:10px}
+  .concl{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px;font-size:14.5px;line-height:1.8}
+  .small{font-size:12px;color:var(--muted)}
+  .monthbar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;box-shadow:0 6px 20px rgba(15,23,42,.06)}
+  .monthbar .grow{flex:1;min-width:140px}
+  .mchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chip{border:1px solid #cbd5e1;background:#f8fafc;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;font-weight:600}
+  .chip.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+  .chip .x{color:#94a3b8;margin-left:6px}
+  .chip.on .x{color:#dbeafe}
+  .bar{height:9px;background:#e2e8f0;border-radius:6px;overflow:hidden;min-width:60px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#3b82f6,#15803d)}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:600;font-size:13.5px;font-family:inherit}
+  .tab.on{background:#0f172a;color:#fff;border-color:#0f172a}
+  .opt{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+       border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:#fcfdff}
+  .opt b{font-size:14.5px}
+  .opt .small{margin-top:3px;line-height:1.6;max-width:720px}
+  .opt button{white-space:nowrap}
+  .danger-note{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:10px;padding:11px 13px;font-size:13.5px;line-height:1.7}
+  /* ---- challan photo / OCR ---- */
+  .phbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 10px}
+  .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .thumb{position:relative;width:74px;height:74px;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:#f8fafc}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .del{position:absolute;top:1px;right:1px;background:rgba(185,28,28,.92);color:#fff;border:0;border-radius:6px;width:19px;height:19px;font-size:12px;line-height:1;cursor:pointer;padding:0}
+  .ocrbox{border:1px dashed #93c5fd;background:#f8fbff;border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px}
+  .ocrbox textarea{width:100%;min-height:78px;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px;resize:vertical}
+  .prog{height:7px;background:#e2e8f0;border-radius:5px;overflow:hidden;margin:7px 0}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#15803d);transition:width .25s}
+  table.ocrtab{font-size:12.5px;margin-top:8px}
+  table.ocrtab input{padding:5px 6px;font-size:12.5px}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.86);display:none;align-items:center;justify-content:center;z-index:99;padding:16px}
+  .modal.on{display:flex}
+  .modal img{max-width:96vw;max-height:88vh;border-radius:10px;background:#fff}
+  .modal .close{position:absolute;top:14px;right:18px;background:#fff;border:0;border-radius:9px;padding:8px 13px;font-weight:700;cursor:pointer;font-size:15px}
+  .okmsg{background:var(--greenbg);border:1px solid #86efac;color:#14532d;border-radius:9px;padding:10px 12px;font-size:13.5px;margin-top:10px;font-weight:600}
+  .chip.sel{background:#b91c1c;color:#fff;border-color:#b91c1c}
+  @media print{
+    body{background:#fff;padding:0}
+    header{color:#000;background:#fff;padding:8px}header p{color:#333}
+    .toolbar,.noprint,.tabs{display:none!important}
+    .card{box-shadow:none;page-break-inside:avoid;border-color:#999}
+    .hidden-print{display:none!important}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏪 FPS Dealer मासिक चालान कैलकुलेटर</h1>
+  <p>हर महीने का Rice &amp; Wheat हिसाब — Quantity (Kg) + Bags डालें, Dealer-wise पूरा विश्लेषण अपने-आप</p>
+</header>
+
+<div class="wrap">
+
+  <!-- MONTH BAR -->
+  <div class="monthbar">
+    <b style="font-size:15px">📅 माह चुनें:</b>
+    <div class="grow"><select id="selMonth" onchange="switchMonth()"></select></div>
+    <div class="grow"><select id="selYear" onchange="switchMonth()"></select></div>
+    <button class="btn sm green noprint" onclick="copyPrevMonth()">📥 पिछले माह से कॉपी</button>
+    <button class="btn sm red noprint" onclick="deleteMonth()">🗑️ यह माह हटाएँ</button>
+    <div style="flex-basis:100%"></div>
+    <div class="small">सेव किए गए महीने (क्लिक कर बदलें):</div>
+    <div class="mchips" id="mchips" style="flex-basis:100%"></div>
+  </div>
+
+  <div class="tabs noprint">
+    <button class="tab on" id="tab-month" onclick="showTab('month')">📄 इस माह का विवरण</button>
+    <button class="tab" id="tab-year" onclick="showTab('year')">📊 माह-वार / वार्षिक रिपोर्ट</button>
+    <button class="tab" id="tab-reset" onclick="showTab('reset')">🧹 डेटा साफ़ करें / नई एंट्री</button>
+  </div>
+
+  <!-- ================= MONTH VIEW ================= -->
+  <div id="view-month">
+
+    <div class="card noprint">
+      <h2>1️⃣ Data Entry <span class="badge" id="entryMonth"></span></h2>
+      <div class="toolbar" style="margin-bottom:12px">
+        <button class="btn green sm" onclick="addDealer()">➕ नया Dealer</button>
+        <button class="btn ghost sm" onclick="loadSample()">📋 Sample Data</button>
+        <button class="btn gray sm" onclick="clearMonth()">🧹 इस माह का डेटा खाली</button>
+        <button class="btn sm" onclick="window.print()">🖨️ Print / PDF</button>
+        <button class="btn ghost sm" onclick="exportCSV()">⬇️ इस माह की CSV</button>
+        <button class="btn amber sm" onclick="backup()">💾 पूरा बैकअप (JSON)</button>
+        <button class="btn ghost sm" onclick="document.getElementById('fileIn').click()">📂 बैकअप लोड</button>
+        <input type="file" id="fileIn" accept=".json" style="display:none" onchange="restore(this)">
+      </div>
+      <div id="dealers" class="dealers"></div>
+      <div class="note">💡 केवल <b>Quantity (Kg)</b> और <b>Bags</b> भरें — Total, Average/Bag, अंतर और निष्कर्ष स्वतः बनेंगे। डेटा माह-वार अपने-आप सेव होता है।</div>
+    </div>
+
+    <div class="card">
+      <h2>2️⃣ Dealer-wise विस्तृत विवरण <span class="badge" id="detMonth"></span></h2>
+      <div style="overflow-x:auto"><table id="detail"></table></div>
+      <div id="warnings"></div>
+    </div>
+
+    <div class="card">
+      <h2>3️⃣ Comparison Summary <span class="badge" id="cmpBase"></span></h2>
+      <div style="overflow-x:auto"><table id="compare"></table></div>
+      <div class="note">Difference = हर Dealer का मान − पहले Dealer (Base) का मान।</div>
+    </div>
+
+    <div class="card">
+      <h2>4️⃣ निष्कर्ष (Conclusion)</h2>
+      <div class="kpis" id="kpis"></div>
+      <div class="concl" id="conclusion"></div>
+    </div>
+  </div>
+
+  <!-- ================= YEAR VIEW ================= -->
+  <div id="view-year" style="display:none">
+    <div class="card">
+      <h2>📊 माह-वार सारांश <span class="badge" id="yrBadge"></span>
+        <button class="btn ghost sm noprint" onclick="exportAllCSV()" style="margin-left:auto">⬇️ सभी महीनों की CSV</button>
+      </h2>
+      <div class="toolbar noprint" style="margin-bottom:10px">
+        <label class="small">Dealer चुनें:</label>
+        <div style="min-width:220px"><select id="selDealer" onchange="buildYear()"></select></div>
+        <label class="small"><input type="checkbox" id="allYears" onchange="buildYear()"> सभी वर्ष दिखाएँ</label>
+      </div>
+      <div style="overflow-x:auto"><table id="monthly"></table></div>
+      <div class="note">यह तालिका चुने गए Dealer का माह-दर-माह उठाव दिखाती है। अंतिम पंक्ति में कुल जोड़ व औसत है।</div>
+    </div>
+
+    <div class="card">
+      <h2>🏆 वार्षिक Dealer तुलना <span class="badge g" id="yrBadge2"></span></h2>
+      <div style="overflow-x:auto"><table id="yearcmp"></table></div>
+    </div>
+
+    <div class="card">
+      <h2>📈 मासिक ट्रेंड (कुल मात्रा)</h2>
+      <div style="overflow-x:auto"><table id="trend"></table></div>
+    </div>
+  </div>
+
+  <!-- ================= RESET VIEW ================= -->
+  <div id="view-reset" style="display:none">
+
+    <div class="card">
+      <h2>🧹 डेटा साफ़ करें — नई एंट्री के लिए <span class="badge">Fresh Entry</span></h2>
+      <div class="danger-note">
+        ⚠️ <b>सावधान:</b> साफ़ किया गया डेटा वापस नहीं आएगा। पहले नीचे दिए
+        <b>बैकअप</b> बटन से एक JSON फाइल सुरक्षित रख लें — बाद में उसी से पूरा डेटा वापस लोड किया जा सकता है।
+      </div>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn amber" onclick="backup()">💾 पहले बैकअप लें (JSON)</button>
+        <button class="btn ghost" onclick="exportAllCSV()">⬇️ सभी महीनों की CSV</button>
+        <button class="btn ghost" onclick="document.getElementById('fileIn2').click()">📂 बैकअप से वापस लाएँ</button>
+        <input type="file" id="fileIn2" accept=".json" style="display:none" onchange="restore(this)">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📌 वर्तमान स्थिति</h2>
+      <div class="kpis" id="resetKpis"></div>
+    </div>
+
+    <div class="card">
+      <h2>1️⃣ हल्की सफ़ाई — Dealer व नाम रहने दें</h2>
+      <div class="opt">
+        <div>
+          <b>केवल इस माह की मात्रा मिटाएँ</b>
+          <div class="small">Dealer के नाम, FPS और पंक्तियाँ जस की तस रहेंगी — सिर्फ Kg और Bags के खाने खाली होंगे। <b id="rsMonth1">—</b></div>
+        </div>
+        <button class="btn" onclick="doReset('qty')">मात्रा खाली करें</button>
+      </div>
+      <div class="opt">
+        <div>
+          <b>सभी महीनों की मात्रा मिटाएँ</b>
+          <div class="small">हर माह के Kg/Bags शून्य, पर Dealer सूची और माह की संरचना बनी रहेगी।</div>
+        </div>
+        <button class="btn" onclick="doReset('qtyAll')">सभी माह की मात्रा खाली</button>
+      </div>
+      <div class="opt">
+        <div>
+          <b>सिर्फ चालान फोटो हटाएँ</b>
+          <div class="small">सभी महीनों की अटैच की गई चालान तस्वीरें हट जाएंगी, आँकड़े सुरक्षित रहेंगे — स्टोरेज खाली करने के लिए उपयोगी। <b id="rsPhoto">—</b></div>
+        </div>
+        <button class="btn amber" onclick="doReset('photos')">📷 सभी फोटो हटाएँ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2️⃣ माह / वर्ष हटाएँ</h2>
+      <div class="opt">
+        <div>
+          <b>यह पूरा माह हटाएँ</b>
+          <div class="small">चुने गए माह का रिकॉर्ड सूची से पूरी तरह हट जाएगा। <b id="rsMonth2">—</b></div>
+        </div>
+        <button class="btn red" onclick="doReset('month')">माह हटाएँ</button>
+      </div>
+      <div class="opt">
+        <div>
+          <b>चुने गए वर्ष के सभी माह हटाएँ</b>
+          <div class="small">वर्ष <b id="rsYear">—</b> के अंतर्गत सेव सभी महीनों का डेटा हट जाएगा।</div>
+        </div>
+        <button class="btn red" onclick="doReset('year')">वर्ष हटाएँ</button>
+      </div>
+      <div class="opt">
+        <div>
+          <b>चुनकर हटाएँ</b>
+          <div class="small">नीचे से जिन महीनों को हटाना है उन्हें टिक करें, फिर बटन दबाएँ।</div>
+          <div class="mchips" id="rsPick" style="margin-top:8px"></div>
+        </div>
+        <button class="btn red" onclick="doReset('picked')">चुने हुए हटाएँ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3️⃣ पूरी तरह नई शुरुआत</h2>
+      <div class="opt">
+        <div>
+          <b>सब कुछ मिटाकर खाली फॉर्म</b>
+          <div class="small">सारे महीने, सारे Dealer हट जाएंगे और वर्तमान माह में 2 खाली Dealer कार्ड मिलेंगे।</div>
+        </div>
+        <button class="btn red" onclick="doReset('allBlank')">🗑️ सब मिटाएँ (खाली फॉर्म)</button>
+      </div>
+      <div class="opt">
+        <div>
+          <b>सब मिटाकर Dealer नाम रखें</b>
+          <div class="small">पुराने सारे आँकड़े हटेंगे, पर वर्तमान Dealer के नाम व FPS नए खाली माह में रह जाएंगे — नियमित मासिक एंट्री के लिए सबसे उपयोगी।</div>
+        </div>
+        <button class="btn green" onclick="doReset('allKeepNames')">✨ नई शुरुआत (नाम रखें)</button>
+      </div>
+      <div class="opt">
+        <div>
+          <b>Sample उदाहरण फिर से लोड करें</b>
+          <div class="small">Lalbabu Prasad व Manoj Kumar वाला नमूना डेटा वर्तमान माह में वापस आ जाएगा।</div>
+        </div>
+        <button class="btn ghost" onclick="doReset('sample')">📋 Sample लोड</button>
+      </div>
+      <div id="resetMsg"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="imgModal" onclick="closeModal()">
+    <button class="close" onclick="closeModal()">✕ बंद</button>
+    <img id="modalImg" src="" alt="challan">
+  </div>
+
+  <p class="small" style="text-align:center">मानक बोरा वजन: Rice/Wheat ≈ 50 Kg — औसत 50 Kg से अधिक होने का अर्थ है बोरों में अतिरिक्त वजन।</p>
+</div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const MONTHS = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितम्बर','अक्टूबर','नवम्बर','दिसम्बर'];
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const FIELDS = [
+  {key:'riceAAY',  label:'Fortified Rice (AAY)'},
+  {key:'ricePHH',  label:'Fortified Rice (PHH)'},
+  {key:'wheatAAY', label:'Wheat (AAY)'},
+  {key:'wheatPHH', label:'Wheat (PHH)'}
+];
+const SAMPLE = [
+  {name:'Lalbabu Prasad', fps:'Abavakarpur',
+   riceAAY:{kg:1554,bags:31}, ricePHH:{kg:3162,bags:62},
+   wheatAAY:{kg:1036,bags:20}, wheatPHH:{kg:2108,bags:41}},
+  {name:'Manoj Kumar', fps:'Mansurpur Halaiya',
+   riceAAY:{kg:546,bags:11}, ricePHH:{kg:4182,bags:82},
+   wheatAAY:{kg:364,bags:7}, wheatPHH:{kg:2788,bags:54}}
+];
+const KEY = 'fpsMonthlyStore_v2';
+
+/* ---------- STATE ---------- */
+let store = {};          // { "2026-07": [dealer,...], ... }
+let curKey = '';         // active "YYYY-MM"
+
+/* ---------- HELPERS ---------- */
+function mk(y,m){ return y+'-'+String(m+1).padStart(2,'0'); }
+function label(k){ const [y,m]=k.split('-'); return MONTHS[+m-1]+' '+y; }
+function esc(s){ return String(s??'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function n(v){ const x=parseFloat(v); return isFinite(x)?x:0; }
+function fmt(x,dp){ dp=dp===undefined?0:dp; return (Math.round(x*100)/100).toLocaleString('en-IN',{minimumFractionDigits:dp,maximumFractionDigits:dp}); }
+function blankDealer(i){ const d={name:'Dealer '+(i+1),fps:''}; FIELDS.forEach(f=>d[f.key]={kg:'',bags:''}); return d; }
+function cur(){ if(!store[curKey]) store[curKey]=JSON.parse(JSON.stringify(SAMPLE)); return store[curKey]; }
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(store)); }
+  catch(e){
+    if(!window.__quotaWarned){ window.__quotaWarned=true;
+      alert('⚠️ ब्राउज़र स्टोरेज भर गया (आमतौर पर फोटो के कारण)।\nकुछ पुरानी चालान फोटो हटाएँ, या 💾 बैकअप लेकर पुराने माह हटाएँ।\nअभी के बदलाव सेव नहीं हो पाए।');
+    }
+  }
+}
+function photoCount(){ let c=0,b=0; savedKeys().forEach(k=> store[k].forEach(d=>{ (d.photos||[]).forEach(p=>{c++;b+=p.url.length;}); })); return {c, mb:(b/1048576).toFixed(1)}; }
+function savedKeys(){ return Object.keys(store).sort(); }
+
+/* ---------- INIT ---------- */
+function init(){
+  try{ store = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ store={}; }
+  const now = new Date();
+  const yNow = now.getFullYear();
+  const ySel = document.getElementById('selYear');
+  for(let y=yNow-4; y<=yNow+2; y++) ySel.insertAdjacentHTML('beforeend',`<option value="${y}">${y}</option>`);
+  const mSel = document.getElementById('selMonth');
+  MONTHS.forEach((m,i)=> mSel.insertAdjacentHTML('beforeend',`<option value="${i}">${m} / ${MONTHS_EN[i]}</option>`));
+
+  const keys = savedKeys();
+  curKey = keys.length ? keys[keys.length-1] : mk(yNow, now.getMonth());
+  if(!store[curKey]) store[curKey] = JSON.parse(JSON.stringify(SAMPLE));
+  syncSelects();
+  render();
+}
+function syncSelects(){
+  const [y,m] = curKey.split('-');
+  const ySel=document.getElementById('selYear');
+  if(![...ySel.options].some(o=>o.value===y)) ySel.insertAdjacentHTML('beforeend',`<option value="${y}">${y}</option>`);
+  ySel.value = y;
+  document.getElementById('selMonth').value = String(+m-1);
+}
+function switchMonth(){
+  const y = document.getElementById('selYear').value;
+  const m = +document.getElementById('selMonth').value;
+  curKey = mk(y,m);
+  if(!store[curKey]) store[curKey] = seedFromPrev();
+  render();
+}
+function seedFromPrev(){
+  const keys = savedKeys().filter(k=>k<curKey);
+  if(!keys.length) return [blankDealer(0),blankDealer(1)];
+  const prev = store[keys[keys.length-1]];
+  return prev.map(d=>{ const c={name:d.name,fps:d.fps}; FIELDS.forEach(f=>c[f.key]={kg:'',bags:''}); return c; });
+}
+function copyPrevMonth(){
+  const keys = savedKeys().filter(k=>k<curKey);
+  if(!keys.length){ alert('पिछले माह का कोई डेटा नहीं मिला।'); return; }
+  const pk = keys[keys.length-1];
+  if(!confirm(label(pk)+' का पूरा डेटा (मात्रा सहित) '+label(curKey)+' में कॉपी करें?')) return;
+  store[curKey] = JSON.parse(JSON.stringify(store[pk]));
+  render();
+}
+function deleteMonth(){
+  if(!confirm(label(curKey)+' का सारा डेटा हटा दें?')) return;
+  delete store[curKey]; save();
+  const keys = savedKeys();
+  curKey = keys.length ? keys[keys.length-1] : curKey;
+  if(!store[curKey]) store[curKey] = [blankDealer(0),blankDealer(1)];
+  syncSelects(); render();
+}
+function clearMonth(){
+  if(!confirm(label(curKey)+' के सारे आँकड़े खाली कर दें?')) return;
+  store[curKey] = cur().map(d=>{ const c={name:d.name,fps:d.fps}; FIELDS.forEach(f=>c[f.key]={kg:'',bags:''}); return c; });
+  render();
+}
+function loadSample(){ store[curKey] = JSON.parse(JSON.stringify(SAMPLE)); render(); }
+function showTab(t){
+  ['month','year','reset'].forEach(v=>{
+    document.getElementById('view-'+v).style.display = (t===v)?'':'none';
+    document.getElementById('tab-'+v).classList.toggle('on', t===v);
+  });
+  if(t==='year')  buildYear();
+  if(t==='reset') buildReset();
+}
+
+/* ---------- RESET / FRESH ENTRY TAB ---------- */
+let pickedMonths = [];
+function blankQty(list, keepNames){
+  return list.map((d,i)=>{ const c={name:keepNames?(d.name||''):('Dealer '+(i+1)), fps:keepNames?(d.fps||''):''};
+    FIELDS.forEach(f=> c[f.key]={kg:'',bags:''}); return c; });
+}
+function buildReset(){
+  const keys = savedKeys();
+  const y = curKey.split('-')[0];
+  document.getElementById('rsMonth1').textContent = '(वर्तमान माह: '+label(curKey)+')';
+  document.getElementById('rsMonth2').textContent = '(वर्तमान माह: '+label(curKey)+')';
+  document.getElementById('rsYear').textContent = y;
+  const pc = photoCount();
+  document.getElementById('rsPhoto').textContent = '(अभी '+pc.c+' फोटो, लगभग '+pc.mb+' MB)';
+
+  let totKg=0, totBags=0, entries=0;
+  keys.forEach(k=> store[k].forEach(d=>{ const s=stats(d); totKg+=s.totKg; totBags+=s.totBags; if(s.totKg||s.totBags) entries++; }));
+  const names = allDealerNames(keys);
+  document.getElementById('resetKpis').innerHTML = `
+    <div class="kpi"><span>सेव किए महीने</span><b>${keys.length}</b></div>
+    <div class="kpi"><span>कुल Dealer नाम</span><b>${names.length}</b></div>
+    <div class="kpi"><span>भरी हुई प्रविष्टियाँ</span><b>${entries}</b></div>
+    <div class="kpi"><span>कुल दर्ज अनाज</span><b>${fmt(totKg)} Kg</b></div>
+    <div class="kpi"><span>कुल दर्ज Bags</span><b>${fmt(totBags)}</b></div>
+    <div class="kpi"><span>वर्तमान माह</span><b>${label(curKey)}</b></div>`;
+
+  pickedMonths = pickedMonths.filter(k=>keys.includes(k));
+  document.getElementById('rsPick').innerHTML = keys.length
+    ? keys.map(k=>`<span class="chip ${pickedMonths.includes(k)?'sel':''}" onclick="togglePick('${k}')">${pickedMonths.includes(k)?'☑':'☐'} ${label(k)}</span>`).join('')
+    : '<span class="small">कोई माह सेव नहीं है।</span>';
+}
+function togglePick(k){
+  const i = pickedMonths.indexOf(k);
+  if(i<0) pickedMonths.push(k); else pickedMonths.splice(i,1);
+  buildReset();
+}
+function msg(txt){
+  const el=document.getElementById('resetMsg');
+  el.innerHTML = `<div class="okmsg">✅ ${txt}</div>`;
+  setTimeout(()=>{ el.innerHTML=''; }, 6000);
+}
+function doReset(mode){
+  const keys = savedKeys();
+  const y = curKey.split('-')[0];
+  let done = '';
+
+  if(mode==='qty'){
+    if(!confirm(label(curKey)+' की सारी मात्रा (Kg/Bags) खाली कर दें?\nDealer के नाम बने रहेंगे।')) return;
+    store[curKey] = blankQty(cur(), true);
+    done = label(curKey)+' की मात्रा खाली कर दी गई। अब नई एंट्री कर सकते हैं।';
+  }
+  else if(mode==='qtyAll'){
+    if(!confirm('सभी '+keys.length+' महीनों की मात्रा खाली कर दें?\nDealer के नाम व माह की सूची बनी रहेगी।')) return;
+    keys.forEach(k=> store[k] = blankQty(store[k], true));
+    done = 'सभी महीनों की मात्रा खाली कर दी गई।';
+  }
+  else if(mode==='photos'){
+    const pc = photoCount();
+    if(!pc.c){ alert('कोई फोटो अटैच नहीं है।'); return; }
+    if(!confirm('सभी '+pc.c+' चालान फोटो हटा दें? (आँकड़े सुरक्षित रहेंगे)')) return;
+    keys.forEach(k=> store[k].forEach(d=> delete d.photos));
+    done = pc.c+' फोटो हटा दी गईं, लगभग '+pc.mb+' MB स्टोरेज खाली हुआ।';
+  }
+  else if(mode==='month'){
+    if(!confirm(label(curKey)+' का पूरा रिकॉर्ड हटा दें?')) return;
+    delete store[curKey];
+    const ks = savedKeys();
+    if(ks.length){ curKey = ks[ks.length-1]; }
+    else { store[curKey] = [blankDealer(0),blankDealer(1)]; }
+    done = 'माह हटा दिया गया। अब सक्रिय माह: '+label(curKey);
+  }
+  else if(mode==='year'){
+    const del = keys.filter(k=>k.startsWith(y));
+    if(!del.length){ alert('वर्ष '+y+' में कोई सेव माह नहीं है।'); return; }
+    if(!confirm('वर्ष '+y+' के सभी '+del.length+' महीने हटा दें?')) return;
+    del.forEach(k=> delete store[k]);
+    const ks = savedKeys();
+    curKey = ks.length ? ks[ks.length-1] : curKey;
+    if(!store[curKey]) store[curKey] = [blankDealer(0),blankDealer(1)];
+    done = 'वर्ष '+y+' के '+del.length+' माह हटा दिए गए।';
+  }
+  else if(mode==='picked'){
+    if(!pickedMonths.length){ alert('पहले नीचे से महीने टिक करें।'); return; }
+    if(!confirm(pickedMonths.length+' चुने हुए माह हटा दें?\n'+pickedMonths.map(label).join(', '))) return;
+    pickedMonths.forEach(k=> delete store[k]);
+    const cnt = pickedMonths.length; pickedMonths = [];
+    const ks = savedKeys();
+    if(!store[curKey]) curKey = ks.length ? ks[ks.length-1] : curKey;
+    if(!store[curKey]) store[curKey] = [blankDealer(0),blankDealer(1)];
+    done = cnt+' माह हटा दिए गए।';
+  }
+  else if(mode==='allBlank'){
+    if(!confirm('⚠️ सारा डेटा (सभी महीने + सभी Dealer) पूरी तरह मिटा दें?\nयह वापस नहीं आएगा।')) return;
+    if(!confirm('अंतिम पुष्टि — क्या आपने बैकअप ले लिया है?\nOK दबाने पर सब मिट जाएगा।')) return;
+    store = {}; store[curKey] = [blankDealer(0),blankDealer(1)];
+    done = 'सारा डेटा मिटा दिया गया। '+label(curKey)+' में खाली फॉर्म तैयार है।';
+  }
+  else if(mode==='allKeepNames'){
+    const names = cur().map(d=>({name:d.name||'',fps:d.fps||''}));
+    if(!confirm('सारे पुराने आँकड़े मिटाकर नई शुरुआत करें?\nDealer के नाम ('+names.map(x=>x.name).join(', ')+') बने रहेंगे।')) return;
+    store = {};
+    store[curKey] = names.map(x=>{ const c={name:x.name,fps:x.fps}; FIELDS.forEach(f=>c[f.key]={kg:'',bags:''}); return c; });
+    done = 'नई शुरुआत तैयार — Dealer नाम सुरक्षित, मात्रा खाली।';
+  }
+  else if(mode==='sample'){
+    if(!confirm(label(curKey)+' में Sample डेटा लोड करें? वर्तमान माह का डेटा बदल जाएगा।')) return;
+    store[curKey] = JSON.parse(JSON.stringify(SAMPLE));
+    done = 'Sample डेटा लोड हो गया।';
+  }
+
+  save(); render(); buildReset(); msg(done);
+}
+
+/* ---------- RENDER ENTRY ---------- */
+function render(){
+  syncSelects();
+  const D = cur();
+  const box = document.getElementById('dealers'); box.innerHTML='';
+  D.forEach((d,i)=>{
+    let rows='';
+    FIELDS.forEach(f=>{
+      rows += `<tr><td class="lbl">${f.label}</td>
+        <td><input type="number" step="0.01" min="0" placeholder="Kg" value="${d[f.key].kg}" oninput="upd(${i},'${f.key}','kg',this.value)"></td>
+        <td><input type="number" step="1" min="0" placeholder="Bags" value="${d[f.key].bags}" oninput="upd(${i},'${f.key}','bags',this.value)"></td></tr>`;
+    });
+    const div=document.createElement('div'); div.className='card'; div.style.margin='0';
+    div.innerHTML = `
+      <div class="dealer-head">
+        <b style="color:#1d4ed8">D${i+1}</b>
+        <input type="text" placeholder="Dealer का नाम" value="${esc(d.name)}" oninput="updName(${i},'name',this.value)">
+        <button class="btn red sm" title="हटाएँ" onclick="delDealer(${i})">✕</button>
+      </div>
+      <input type="text" placeholder="FPS / गाँव / पंचायत" value="${esc(d.fps||'')}" oninput="updName(${i},'fps',this.value)" style="margin-bottom:10px">
+      <div class="phbar">
+        <button class="btn sm green" onclick="document.getElementById('cam${i}').click()">📷 चालान फोटो लें</button>
+        <button class="btn sm ghost" onclick="document.getElementById('gal${i}').click()">🖼️ गैलरी से चुनें</button>
+        <button class="btn sm amber" onclick="runOCR(${i})">🔍 फोटो से डेटा पढ़ें</button>
+        <button class="btn sm ghost" onclick="manualText(${i})">⌨️ टेक्स्ट पेस्ट करें</button>
+        <input type="file" id="cam${i}" accept="image/*" capture="environment" multiple style="display:none" onchange="addPhotos(${i},this)">
+        <input type="file" id="gal${i}" accept="image/*" multiple style="display:none" onchange="addPhotos(${i},this)">
+      </div>
+      <div class="thumbs" id="th${i}">${thumbsHTML(d,i)}</div>
+      <div id="ocr${i}"></div>
+      <table><tr><th class="lbl">मद</th><th>Quantity (Kg)</th><th>Bags</th></tr>${rows}</table>`;
+    box.appendChild(div);
+  });
+  Object.keys(ocrState).forEach(k=>{ if(+k < D.length) renderOcrBox(+k); });
+  ['entryMonth','detMonth'].forEach(id=> document.getElementById(id).textContent = label(curKey));
+  buildChips();
+  calc();
+}
+function buildChips(){
+  const c=document.getElementById('mchips'); const keys=savedKeys();
+  c.innerHTML = keys.length ? keys.map(k=>`<span class="chip ${k===curKey?'on':''}" onclick="goto('${k}')">${label(k)}</span>`).join('')
+                            : '<span class="small">अभी कोई माह सेव नहीं है — नीचे डेटा भरें, अपने-आप सेव होगा।</span>';
+}
+function goto(k){ curKey=k; render(); }
+function upd(i,key,sub,v){ cur()[i][key][sub]=v; calc(); }
+function updName(i,key,v){ cur()[i][key]=v; calc(); buildChips(); }
+function addDealer(){ cur().push(blankDealer(cur().length)); render(); }
+function delDealer(i){ if(cur().length<=1){alert('कम से कम एक Dealer आवश्यक है।');return;} cur().splice(i,1); render(); }
+
+/* ---------- STATS ---------- */
+function stats(d){
+  const g={}; FIELDS.forEach(f=> g[f.key]={kg:n(d[f.key].kg),bags:n(d[f.key].bags)});
+  const riceKg=g.riceAAY.kg+g.ricePHH.kg, riceBags=g.riceAAY.bags+g.ricePHH.bags;
+  const wheatKg=g.wheatAAY.kg+g.wheatPHH.kg, wheatBags=g.wheatAAY.bags+g.wheatPHH.bags;
+  const totKg=riceKg+wheatKg, totBags=riceBags+wheatBags;
+  return {...g, riceKg,riceBags,riceAvg:riceBags?riceKg/riceBags:0,
+          wheatKg,wheatBags,wheatAvg:wheatBags?wheatKg/wheatBags:0,
+          totKg,totBags,avg:totBags?totKg/totBags:0, excess:totKg-totBags*50};
+}
+function calc(){
+  const D=cur(); const S=D.map(stats);
+  buildDetail(D,S); buildCompare(D,S); buildConclusion(D,S); buildWarnings(D,S);
+  save(); buildChips();
+}
+
+/* ---------- MONTH TABLES ---------- */
+function buildDetail(D,S){
+  let head='<tr><th class="lbl">विवरण</th>';
+  D.forEach((d,i)=> head+=`<th>Dealer ${i+1} — ${esc(d.name||'-')}${d.fps?'<br><span style="font-weight:400;font-size:12px">('+esc(d.fps)+')</span>':''}</th>`);
+  head+='</tr>';
+  const cell=(s,k)=>`<td>${fmt(s[k].kg)} Kg <span class="small">(${fmt(s[k].bags)} Bags)</span></td>`;
+  let b='';
+  b+=`<tr class="grp"><td colspan="${D.length+1}">🍚 RICE</td></tr>`;
+  b+=`<tr><td class="lbl">Fortified Rice (AAY)</td>${S.map(s=>cell(s,'riceAAY')).join('')}</tr>`;
+  b+=`<tr><td class="lbl">Fortified Rice (PHH)</td>${S.map(s=>cell(s,'ricePHH')).join('')}</tr>`;
+  b+=`<tr class="sub"><td class="lbl">🔹 Total Rice</td>${S.map(s=>`<td>${fmt(s.riceKg)} Kg (${fmt(s.riceBags)} Bags)</td>`).join('')}</tr>`;
+  b+=`<tr><td class="lbl">Rice Avg./Bag</td>${S.map(s=>`<td>${fmt(s.riceAvg,2)} Kg</td>`).join('')}</tr>`;
+  b+=`<tr class="grp"><td colspan="${D.length+1}">🌾 WHEAT</td></tr>`;
+  b+=`<tr><td class="lbl">Wheat (AAY)</td>${S.map(s=>cell(s,'wheatAAY')).join('')}</tr>`;
+  b+=`<tr><td class="lbl">Wheat (PHH)</td>${S.map(s=>cell(s,'wheatPHH')).join('')}</tr>`;
+  b+=`<tr class="sub"><td class="lbl">🔹 Total Wheat</td>${S.map(s=>`<td>${fmt(s.wheatKg)} Kg (${fmt(s.wheatBags)} Bags)</td>`).join('')}</tr>`;
+  b+=`<tr><td class="lbl">Wheat Avg./Bag</td>${S.map(s=>`<td>${fmt(s.wheatAvg,2)} Kg</td>`).join('')}</tr>`;
+  b+=`<tr class="grp"><td colspan="${D.length+1}">📦 GRAND TOTAL</td></tr>`;
+  b+=`<tr class="tot"><td class="lbl">Total Quantity (Rice + Wheat)</td>${S.map(s=>`<td>${fmt(s.totKg)} Kg</td>`).join('')}</tr>`;
+  b+=`<tr class="tot"><td class="lbl">Total Bags</td>${S.map(s=>`<td>${fmt(s.totBags)} Bags</td>`).join('')}</tr>`;
+  b+=`<tr class="grand"><td class="lbl">Overall Average / Bag</td>${S.map(s=>`<td>${fmt(s.avg,2)} Kg/Bag</td>`).join('')}</tr>`;
+  b+=`<tr><td class="lbl">50 Kg मानक से अतिरिक्त</td>${S.map(s=>`<td class="${s.excess>0?'pos':(s.excess<0?'neg':'zero')}">${s.excess>0?'+':''}${fmt(s.excess,2)} Kg</td>`).join('')}</tr>`;
+  document.getElementById('detail').innerHTML = head+b;
+}
+function buildCompare(D,S){
+  document.getElementById('cmpBase').textContent = label(curKey)+' | Base: '+(D[0].name||'Dealer 1');
+  const rows=[['Total Rice','riceKg','Kg',0],['Rice Bags','riceBags','Bags',0],['Rice Avg./Bag','riceAvg','Kg',2],
+              ['Total Wheat','wheatKg','Kg',0],['Wheat Bags','wheatBags','Bags',0],['Wheat Avg./Bag','wheatAvg','Kg',2],
+              ['Total Quantity','totKg','Kg',0],['Total Bags','totBags','Bags',0],['Overall Avg./Bag','avg','Kg/Bag',2]];
+  let head='<tr><th class="lbl">Parameter</th>';
+  D.forEach(d=> head+=`<th>${esc(d.name||'-')}</th>`);
+  D.slice(1).forEach(d=> head+=`<th>अंतर (${esc(d.name||'-')})</th>`);
+  head+='</tr>';
+  let b='';
+  rows.forEach(([lab,key,unit,dp])=>{
+    let tr=`<tr><td class="lbl">${lab}</td>`;
+    S.forEach(s=> tr+=`<td>${fmt(s[key],dp)} ${unit}</td>`);
+    S.slice(1).forEach(s=>{ const df=s[key]-S[0][key];
+      tr+=`<td class="${df>0?'pos':(df<0?'neg':'zero')}">${df>0?'+':''}${fmt(df,dp)} ${unit}</td>`; });
+    b+=tr+'</tr>';
+  });
+  document.getElementById('compare').innerHTML=head+b;
+}
+function buildWarnings(D,S){
+  let m=[];
+  S.forEach((s,i)=>{ const nm=D[i].name||('Dealer '+(i+1));
+    if(s.totBags===0&&s.totKg>0) m.push(`⚠️ <b>${esc(nm)}</b>: Bags संख्या 0 है, Average नहीं निकाला जा सका।`);
+    if(s.avg>0&&(s.avg<45||s.avg>55)) m.push(`⚠️ <b>${esc(nm)}</b>: औसत ${fmt(s.avg,2)} Kg/Bag असामान्य है (सामान्य ≈ 45–55 Kg) — प्रविष्टि जाँचें।`);
+  });
+  document.getElementById('warnings').innerHTML = m.map(x=>`<div class="warn">${x}</div>`).join('');
+}
+function buildConclusion(D,S){
+  const names=D.map((d,i)=>d.name||('Dealer '+(i+1)));
+  const totKg=S.reduce((a,s)=>a+s.totKg,0), totBags=S.reduce((a,s)=>a+s.totBags,0);
+  const gAvg=totBags?totKg/totBags:0;
+  let hi=0,lo=0; S.forEach((s,i)=>{ if(s.avg>S[hi].avg)hi=i; if(s.avg<S[lo].avg)lo=i; });
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi"><span>माह</span><b>${label(curKey)}</b></div>
+    <div class="kpi"><span>कुल Dealers</span><b>${S.length}</b></div>
+    <div class="kpi"><span>कुल अनाज</span><b>${fmt(totKg)} Kg</b></div>
+    <div class="kpi"><span>कुल Bags</span><b>${fmt(totBags)}</b></div>
+    <div class="kpi"><span>सामूहिक औसत/बैग</span><b>${fmt(gAvg,2)} Kg</b></div>
+    <div class="kpi"><span>सर्वाधिक औसत</span><b style="color:#15803d">${esc(names[hi])}<br><span style="font-size:14px">${fmt(S[hi].avg,2)} Kg</span></b></div>
+    <div class="kpi"><span>न्यूनतम औसत</span><b style="color:#b91c1c">${esc(names[lo])}<br><span style="font-size:14px">${fmt(S[lo].avg,2)} Kg</span></b></div>`;
+  let t='';
+  if(S.length>=2){
+    const same=S.every(s=>s.totBags===S[0].totBags);
+    const p=[];
+    p.push(same?`<b>सभी Dealers को समान ${fmt(S[0].totBags)} Bags ही आवंटित हुए हैं</b>`
+               :`Dealers को अलग-अलग Bags आवंटित हुए (${S.map((s,i)=>esc(names[i])+': '+fmt(s.totBags)).join(', ')})`);
+    const dKg=S[hi].totKg-S[lo].totKg, dAvg=S[hi].avg-S[lo].avg;
+    if(hi!==lo&&dKg!==0) p.push(`लेकिन <b>${esc(names[hi])}</b> के चालान में <b>${fmt(Math.abs(dKg),2)} Kg अधिक</b> अनाज है, जिससे प्रति बैग औसत वजन लगभग <b>${fmt(Math.abs(dAvg),2)} Kg अधिक</b> है`);
+    else if(dKg===0) p.push(`और मात्रा भी समान है — कोई अंतर नहीं`);
+    t = `निष्कर्ष (${label(curKey)}): `+p.join(', ')+'।';
+  }else{
+    t = `निष्कर्ष (${label(curKey)}): <b>${esc(names[0])}</b> को कुल ${fmt(S[0].totBags)} Bags में ${fmt(S[0].totKg)} Kg अनाज प्राप्त हुआ, औसत ${fmt(S[0].avg,2)} Kg/Bag।`;
+  }
+  t += `<br><span class="small">50 Kg मानक बोरे की तुलना में अतिरिक्त वजन → `+S.map((s,i)=>`${esc(names[i])}: ${s.excess>=0?'+':''}${fmt(s.excess,2)} Kg`).join(' | ')+`</span>`;
+  document.getElementById('conclusion').innerHTML=t;
+}
+
+/* ---------- YEAR / MONTH-WISE VIEW ---------- */
+function allDealerNames(keys){
+  const set=[];
+  keys.forEach(k=> store[k].forEach(d=>{ const nm=d.name||'-'; if(!set.includes(nm)) set.push(nm); }));
+  return set;
+}
+function keysInScope(){
+  const all = savedKeys();
+  if(document.getElementById('allYears').checked) return all;
+  const y = curKey.split('-')[0];
+  return all.filter(k=>k.startsWith(y));
+}
+function buildYear(){
+  const keys = keysInScope();
+  const yTxt = document.getElementById('allYears').checked ? 'सभी वर्ष' : ('वर्ष '+curKey.split('-')[0]);
+  document.getElementById('yrBadge').textContent = yTxt;
+  document.getElementById('yrBadge2').textContent = yTxt;
+  const names = allDealerNames(keys);
+  const sel = document.getElementById('selDealer');
+  const prev = sel.value;
+  sel.innerHTML = names.map(nm=>`<option value="${esc(nm)}">${esc(nm)}</option>`).join('');
+  if(names.includes(prev)) sel.value = prev;
+  const pick = sel.value || names[0];
+
+  /* --- Table 1: month-wise for picked dealer --- */
+  let h = `<tr><th class="lbl">माह</th><th>Rice AAY</th><th>Rice PHH</th><th>Total Rice</th><th>Rice Avg</th>
+           <th>Wheat AAY</th><th>Wheat PHH</th><th>Total Wheat</th><th>Wheat Avg</th>
+           <th>Total Qty (Kg)</th><th>Total Bags</th><th>Avg/Bag</th></tr>`;
+  let b='', T={riceAAY:0,ricePHH:0,riceKg:0,wheatAAY:0,wheatPHH:0,wheatKg:0,totKg:0,totBags:0,riceBags:0,wheatBags:0};
+  keys.forEach(k=>{
+    const d = store[k].find(x=>(x.name||'-')===pick);
+    if(!d) return;
+    const s = stats(d);
+    T.riceAAY+=s.riceAAY.kg; T.ricePHH+=s.ricePHH.kg; T.riceKg+=s.riceKg; T.riceBags+=s.riceBags;
+    T.wheatAAY+=s.wheatAAY.kg; T.wheatPHH+=s.wheatPHH.kg; T.wheatKg+=s.wheatKg; T.wheatBags+=s.wheatBags;
+    T.totKg+=s.totKg; T.totBags+=s.totBags;
+    b+=`<tr${k===curKey?' style="background:#eff6ff"':''}><td class="lbl"><b>${label(k)}</b></td>
+      <td>${fmt(s.riceAAY.kg)}</td><td>${fmt(s.ricePHH.kg)}</td><td><b>${fmt(s.riceKg)}</b> <span class="small">(${fmt(s.riceBags)}B)</span></td><td>${fmt(s.riceAvg,2)}</td>
+      <td>${fmt(s.wheatAAY.kg)}</td><td>${fmt(s.wheatPHH.kg)}</td><td><b>${fmt(s.wheatKg)}</b> <span class="small">(${fmt(s.wheatBags)}B)</span></td><td>${fmt(s.wheatAvg,2)}</td>
+      <td><b>${fmt(s.totKg)}</b></td><td>${fmt(s.totBags)}</td><td class="${s.avg>50?'pos':(s.avg&&s.avg<50?'neg':'')}">${fmt(s.avg,2)}</td></tr>`;
+  });
+  b+=`<tr class="grand"><td class="lbl">कुल योग (${keys.length} माह)</td>
+      <td>${fmt(T.riceAAY)}</td><td>${fmt(T.ricePHH)}</td><td>${fmt(T.riceKg)} (${fmt(T.riceBags)}B)</td><td>${fmt(T.riceBags?T.riceKg/T.riceBags:0,2)}</td>
+      <td>${fmt(T.wheatAAY)}</td><td>${fmt(T.wheatPHH)}</td><td>${fmt(T.wheatKg)} (${fmt(T.wheatBags)}B)</td><td>${fmt(T.wheatBags?T.wheatKg/T.wheatBags:0,2)}</td>
+      <td>${fmt(T.totKg)}</td><td>${fmt(T.totBags)}</td><td>${fmt(T.totBags?T.totKg/T.totBags:0,2)}</td></tr>`;
+  document.getElementById('monthly').innerHTML = keys.length? h+b : '<tr><td class="lbl">कोई डेटा नहीं</td></tr>';
+
+  /* --- Table 2: yearly dealer comparison --- */
+  const agg = names.map(nm=>{
+    const a={name:nm,months:0,riceKg:0,riceBags:0,wheatKg:0,wheatBags:0,totKg:0,totBags:0};
+    keys.forEach(k=>{ const d=store[k].find(x=>(x.name||'-')===nm); if(!d)return;
+      const s=stats(d); if(s.totKg||s.totBags) a.months++;
+      a.riceKg+=s.riceKg;a.riceBags+=s.riceBags;a.wheatKg+=s.wheatKg;a.wheatBags+=s.wheatBags;a.totKg+=s.totKg;a.totBags+=s.totBags; });
+    a.avg = a.totBags? a.totKg/a.totBags : 0;
+    a.excess = a.totKg - a.totBags*50;
+    return a;
+  });
+  let h2=`<tr><th class="lbl">Dealer</th><th>माह</th><th>Total Rice (Kg)</th><th>Total Wheat (Kg)</th><th>कुल मात्रा (Kg)</th><th>कुल Bags</th><th>Avg/Bag</th><th>50Kg से अतिरिक्त</th><th>अंतर (Base से)</th></tr>`;
+  let b2='';
+  const base = agg[0];
+  agg.forEach(a=>{
+    const df = a.totKg - (base?base.totKg:0);
+    b2+=`<tr><td class="lbl"><b>${esc(a.name)}</b></td><td>${a.months}</td><td>${fmt(a.riceKg)}</td><td>${fmt(a.wheatKg)}</td>
+      <td><b>${fmt(a.totKg)}</b></td><td>${fmt(a.totBags)}</td><td>${fmt(a.avg,2)}</td>
+      <td class="${a.excess>0?'pos':(a.excess<0?'neg':'zero')}">${a.excess>0?'+':''}${fmt(a.excess,2)} Kg</td>
+      <td class="${df>0?'pos':(df<0?'neg':'zero')}">${df>0?'+':''}${fmt(df)} Kg</td></tr>`;
+  });
+  const gT = agg.reduce((a,x)=>({kg:a.kg+x.totKg,bg:a.bg+x.totBags}),{kg:0,bg:0});
+  b2+=`<tr class="tot"><td class="lbl">सभी Dealers कुल</td><td>—</td><td>${fmt(agg.reduce((a,x)=>a+x.riceKg,0))}</td><td>${fmt(agg.reduce((a,x)=>a+x.wheatKg,0))}</td>
+       <td>${fmt(gT.kg)}</td><td>${fmt(gT.bg)}</td><td>${fmt(gT.bg?gT.kg/gT.bg:0,2)}</td><td colspan="2">—</td></tr>`;
+  document.getElementById('yearcmp').innerHTML = names.length? h2+b2 : '<tr><td class="lbl">कोई डेटा नहीं</td></tr>';
+
+  /* --- Table 3: trend bars --- */
+  let h3=`<tr><th class="lbl">माह</th>`; names.forEach(nm=> h3+=`<th>${esc(nm)}</th>`); h3+=`<th>माह कुल</th><th class="lbl">ट्रेंड</th></tr>`;
+  let maxV=0; const rowsT=[];
+  keys.forEach(k=>{
+    const vals = names.map(nm=>{ const d=store[k].find(x=>(x.name||'-')===nm); return d? stats(d).totKg : 0; });
+    const sum = vals.reduce((a,x)=>a+x,0); maxV=Math.max(maxV,sum);
+    rowsT.push({k,vals,sum});
+  });
+  let b3='';
+  rowsT.forEach(r=>{
+    b3+=`<tr${r.k===curKey?' style="background:#eff6ff"':''}><td class="lbl"><b>${label(r.k)}</b></td>`;
+    r.vals.forEach(v=> b3+=`<td>${fmt(v)} Kg</td>`);
+    b3+=`<td><b>${fmt(r.sum)} Kg</b></td><td><div class="bar"><i style="width:${maxV?(r.sum/maxV*100):0}%"></i></div></td></tr>`;
+  });
+  document.getElementById('trend').innerHTML = rowsT.length? h3+b3 : '<tr><td class="lbl">कोई डेटा नहीं</td></tr>';
+}
+
+/* ---------- EXPORT / BACKUP ---------- */
+function csvDownload(rows,fname){
+  const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=fname; a.click();
+}
+function exportCSV(){
+  const D=cur(), S=D.map(stats);
+  const rows=[['माह',label(curKey)],['Parameter',...D.map((d,i)=>(d.name||'Dealer '+(i+1))+(d.fps?' ('+d.fps+')':''))]];
+  const p=(l,f)=>rows.push([l,...S.map(f)]);
+  p('Rice AAY (Kg)',s=>s.riceAAY.kg); p('Rice AAY (Bags)',s=>s.riceAAY.bags);
+  p('Rice PHH (Kg)',s=>s.ricePHH.kg); p('Rice PHH (Bags)',s=>s.ricePHH.bags);
+  p('Total Rice (Kg)',s=>s.riceKg); p('Total Rice (Bags)',s=>s.riceBags); p('Rice Avg/Bag',s=>s.riceAvg.toFixed(2));
+  p('Wheat AAY (Kg)',s=>s.wheatAAY.kg); p('Wheat AAY (Bags)',s=>s.wheatAAY.bags);
+  p('Wheat PHH (Kg)',s=>s.wheatPHH.kg); p('Wheat PHH (Bags)',s=>s.wheatPHH.bags);
+  p('Total Wheat (Kg)',s=>s.wheatKg); p('Total Wheat (Bags)',s=>s.wheatBags); p('Wheat Avg/Bag',s=>s.wheatAvg.toFixed(2));
+  p('Total Quantity (Kg)',s=>s.totKg); p('Total Bags',s=>s.totBags); p('Overall Avg/Bag',s=>s.avg.toFixed(2));
+  p('Excess over 50Kg (Kg)',s=>s.excess.toFixed(2));
+  csvDownload(rows,'FPS_'+curKey+'.csv');
+}
+function exportAllCSV(){
+  const rows=[['Month','Dealer','FPS','Rice AAY Kg','Rice AAY Bags','Rice PHH Kg','Rice PHH Bags','Total Rice Kg','Rice Bags','Rice Avg',
+               'Wheat AAY Kg','Wheat AAY Bags','Wheat PHH Kg','Wheat PHH Bags','Total Wheat Kg','Wheat Bags','Wheat Avg',
+               'Total Qty Kg','Total Bags','Avg per Bag','Excess over 50Kg']];
+  savedKeys().forEach(k=> store[k].forEach(d=>{ const s=stats(d);
+    rows.push([label(k),d.name||'',d.fps||'',s.riceAAY.kg,s.riceAAY.bags,s.ricePHH.kg,s.ricePHH.bags,s.riceKg,s.riceBags,s.riceAvg.toFixed(2),
+      s.wheatAAY.kg,s.wheatAAY.bags,s.wheatPHH.kg,s.wheatPHH.bags,s.wheatKg,s.wheatBags,s.wheatAvg.toFixed(2),
+      s.totKg,s.totBags,s.avg.toFixed(2),s.excess.toFixed(2)]);
+  }));
+  csvDownload(rows,'FPS_All_Months.csv');
+}
+function backup(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(store,null,2)],{type:'application/json'}));
+  a.download='FPS_Backup_'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+/* ================= CHALLAN PHOTO + OCR ================= */
+let ocrState = {};   // { dealerIndex: {busy,status,pct,text,rows} }
+
+/* ---- photo attach (compressed to ~1400px JPEG, stored as dataURL) ---- */
+function addPhotos(i, inp){
+  const files = [...inp.files]; inp.value='';
+  if(!files.length) return;
+  const d = cur()[i]; d.photos = d.photos || [];
+  let pending = files.length;
+  files.forEach(f=>{
+    const rd = new FileReader();
+    rd.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const MAX = 1400;
+        const sc = Math.min(1, MAX/Math.max(img.width,img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        d.photos.push({url: cv.toDataURL('image/jpeg',0.72), name: f.name||'challan.jpg', at: new Date().toISOString()});
+        if(--pending===0){ try{ save(); }catch(err){ alert('⚠️ फोटो सेव नहीं हो पाई (स्टोरेज भर गया)। कुछ पुरानी फोटो हटाएँ।'); }
+          document.getElementById('th'+i).innerHTML = thumbsHTML(d,i); }
+      };
+      img.src = e.target.result;
+    };
+    rd.readAsDataURL(f);
+  });
+}
+function thumbsHTML(d,i){
+  const ph = d.photos||[];
+  if(!ph.length) return '<span class="small">कोई चालान फोटो नहीं — 📷 बटन से जोड़ें (फोटो इसी माह के साथ सेव रहेगी)।</span>';
+  return ph.map((p,j)=>`<div class="thumb" onclick="openModal(${i},${j})" title="${esc(p.name)}">
+      <img src="${p.url}" alt=""><button class="del" onclick="event.stopPropagation();delPhoto(${i},${j})">✕</button></div>`).join('');
+}
+function delPhoto(i,j){
+  if(!confirm('यह फोटो हटाएँ?')) return;
+  cur()[i].photos.splice(j,1); save();
+  document.getElementById('th'+i).innerHTML = thumbsHTML(cur()[i],i);
+}
+function openModal(i,j){
+  document.getElementById('modalImg').src = cur()[i].photos[j].url;
+  document.getElementById('imgModal').classList.add('on');
+}
+function closeModal(){ document.getElementById('imgModal').classList.remove('on'); }
+
+/* ---- Tesseract loader (CDN, offline-safe fallback) ---- */
+function loadTesseract(){
+  return new Promise((res,rej)=>{
+    if(window.Tesseract) return res(window.Tesseract);
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload=()=> window.Tesseract? res(window.Tesseract) : rej(new Error('load fail'));
+    s.onerror=()=>rej(new Error('offline'));
+    document.head.appendChild(s);
+    setTimeout(()=>{ if(!window.Tesseract) rej(new Error('timeout')); }, 25000);
+  });
+}
+
+/* ---- run OCR on all photos of a dealer ---- */
+async function runOCR(i){
+  const d = cur()[i];
+  if(!(d.photos||[]).length){ alert('पहले चालान की फोटो जोड़ें (📷 बटन)।'); return; }
+  ocrState[i] = {busy:true, pct:0, status:'OCR इंजन लोड हो रहा है…', text:'', rows:null};
+  renderOcrBox(i);
+  let T;
+  try{ T = await loadTesseract(); }
+  catch(e){
+    ocrState[i] = {busy:false, pct:0, status:'', text:'',
+      err:'OCR इंजन लोड नहीं हुआ — पहली बार पढ़ने के लिए इंटरनेट चाहिए (लगभग 2–3 MB, एक बार लोड होने पर ब्राउज़र कैश में रहेगा)। तब तक नीचे ⌨️ "टेक्स्ट पेस्ट करें" का उपयोग करें।'};
+    renderOcrBox(i); return;
+  }
+  let all = '';
+  try{
+    for(let j=0;j<d.photos.length;j++){
+      ocrState[i].status = `फोटो ${j+1}/${d.photos.length} पढ़ी जा रही है…`;
+      renderOcrBox(i);
+      const r = await T.recognize(d.photos[j].url, 'eng', {
+        logger: m=>{ if(m.status==='recognizing text'){ ocrState[i].pct = Math.round(m.progress*100); renderOcrBox(i,true); } }
+      });
+      all += '\n' + (r.data.text||'');
+    }
+  }catch(e){
+    ocrState[i] = {busy:false, err:'फोटो पढ़ी नहीं जा सकी — तस्वीर साफ़ व सीधी लें, या टेक्स्ट पेस्ट करें।'};
+    renderOcrBox(i); return;
+  }
+  ocrState[i] = {busy:false, pct:100, status:'पढ़ना पूरा', text:all.trim(), rows:parseChallan(all)};
+  renderOcrBox(i);
+}
+function manualText(i){
+  ocrState[i] = {busy:false, manual:true, text:'', rows:null, status:'चालान का टेक्स्ट नीचे बॉक्स में पेस्ट करें, फिर "टेक्स्ट से निकालें" दबाएँ।'};
+  renderOcrBox(i);
+}
+function ocrTextChange(i,v){ if(ocrState[i]) ocrState[i].text = v; }
+function reparse(i){
+  const st = ocrState[i]; if(!st) return;
+  st.rows = parseChallan(st.text||'');
+  renderOcrBox(i);
+}
+
+/* ---- parser: find AAY/PHH rice & wheat numbers in raw OCR text ---- */
+function parseChallan(txt){
+  const T = (txt||'').replace(/[|]/g,' ').replace(/\u00a0/g,' ');
+  const lines = T.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const out = {riceAAY:{kg:'',bags:''}, ricePHH:{kg:'',bags:''}, wheatAAY:{kg:'',bags:''}, wheatPHH:{kg:'',bags:''}};
+  const isRice  = s=>/(rice|chawal|chaval|चावल|राइस)/i.test(s);
+  const isWheat = s=>/(wheat|gehu|gehun|atta|गेहूँ|गेहू|गेहुं|गेंहू)/i.test(s);
+  const isAAY   = s=>/(aay|antyoday|अंत्योदय|अन्त्योदय|एएवाई)/i.test(s);
+  const isPHH   = s=>/(phh|p\.h\.h|priority|पीएचएच|प्राथमिक)/i.test(s);
+  const nums = s=>{
+    const m = s.replace(/,/g,'').match(/\d+(?:\.\d+)?/g) || [];
+    return m.map(parseFloat).filter(v=>v>0);
+  };
+  lines.forEach(ln=>{
+    const grain = isRice(ln) ? 'rice' : (isWheat(ln) ? 'wheat' : null);
+    if(!grain) return;
+    const sch = isAAY(ln) ? 'AAY' : (isPHH(ln) ? 'PHH' : null);
+    if(!sch) return;
+    const key = grain+sch;
+    const v = nums(ln);
+    if(!v.length) return;
+    // सबसे बड़ी संख्या = Kg (आम तौर पर 100+), उसके बाद 1–999 वाली = Bags
+    const kg = Math.max(...v);
+    const cands = v.filter(x=>x!==kg && x<1000 && Number.isInteger(x));
+    let bags = cands.length ? Math.max(...cands) : '';
+    // यदि बैग नहीं मिला पर kg मिला → 50 Kg मान कर अनुमान
+    if(bags==='' && kg>=50) bags = Math.round(kg/50);
+    if(out[key].kg==='' ){ out[key] = {kg:kg, bags:bags, guess: cands.length?false:true}; }
+  });
+  return out;
+}
+
+/* ---- OCR panel UI ---- */
+function renderOcrBox(i, onlyBar){
+  const el = document.getElementById('ocr'+i); if(!el) return;
+  const st = ocrState[i];
+  if(!st){ el.innerHTML=''; return; }
+  if(onlyBar){
+    const bar = el.querySelector('.prog i');
+    if(bar){ bar.style.width = (st.pct||0)+'%'; const s=el.querySelector('.ocrst'); if(s) s.textContent = st.status+' '+(st.pct||0)+'%'; return; }
+  }
+  let h = '<div class="ocrbox">';
+  if(st.busy){
+    h += `<b>⏳ <span class="ocrst">${esc(st.status)} ${st.pct||0}%</span></b>
+          <div class="prog"><i style="width:${st.pct||0}%"></i></div>
+          <div class="small">बड़ी फोटो में 10–40 सेकंड लग सकते हैं।</div>`;
+  } else if(st.err){
+    h += `<b style="color:#b45309">⚠️ ${esc(st.err)}</b>
+          <div style="margin-top:8px"><button class="btn sm ghost" onclick="manualText(${i})">⌨️ टेक्स्ट पेस्ट करें</button>
+          <button class="btn sm ghost" onclick="closeOcr(${i})">बंद करें</button></div>`;
+  } else {
+    h += `<b>📝 ${esc(st.status||'चालान टेक्स्ट')}</b>
+      <textarea placeholder="चालान का टेक्स्ट यहाँ पेस्ट करें… जैसे:&#10;Fortified Rice AAY 1554 31&#10;Fortified Rice PHH 3162 62&#10;Wheat AAY 1036 20&#10;Wheat PHH 2108 41"
+        oninput="ocrTextChange(${i},this.value)">${esc(st.text||'')}</textarea>
+      <div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn sm" onclick="reparse(${i})">🔎 टेक्स्ट से निकालें</button>
+        <button class="btn sm ghost" onclick="closeOcr(${i})">बंद करें</button>
+      </div>`;
+    if(st.rows){
+      const R = st.rows; let found = 0;
+      let rows='';
+      FIELDS.forEach(f=>{
+        const v = R[f.key]||{kg:'',bags:''};
+        if(v.kg!=='') found++;
+        rows += `<tr><td class="lbl">${f.label}</td>
+          <td><input type="number" step="0.01" value="${v.kg}" oninput="ocrEdit(${i},'${f.key}','kg',this.value)"></td>
+          <td><input type="number" step="1" value="${v.bags}" oninput="ocrEdit(${i},'${f.key}','bags',this.value)"></td>
+          <td class="small">${v.kg===''?'नहीं मिला':(v.guess?'बैग अनुमानित (÷50)':'ठीक')}</td></tr>`;
+      });
+      h += `<div class="small" style="margin-top:9px"><b>निकाला गया डेटा — लागू करने से पहले जाँच लें व सुधार लें:</b></div>
+        <table class="ocrtab"><tr><th class="lbl">मद</th><th>Kg</th><th>Bags</th><th>स्थिति</th></tr>${rows}</table>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm green" onclick="applyOcr(${i})">✅ फॉर्म में भरें (${found}/4)</button>
+          <button class="btn sm ghost" onclick="applyOcr(${i},true)">➕ मौजूदा में जोड़ें</button>
+        </div>
+        <div class="small" style="margin-top:6px">⚠️ OCR 100% सही नहीं होता — भरने के बाद ऊपर की तालिका में औसत/बैग जरूर मिला लें।</div>`;
+    }
+  }
+  h += '</div>';
+  el.innerHTML = h;
+}
+function ocrEdit(i,key,sub,v){ if(ocrState[i]&&ocrState[i].rows) ocrState[i].rows[key][sub]=v; }
+function closeOcr(i){ delete ocrState[i]; renderOcrBox(i); const el=document.getElementById('ocr'+i); if(el) el.innerHTML=''; }
+function applyOcr(i, addMode){
+  const st = ocrState[i]; if(!st||!st.rows){ return; }
+  const d = cur()[i];
+  FIELDS.forEach(f=>{
+    const v = st.rows[f.key]; if(!v) return;
+    if(v.kg!=='' && v.kg!=null)  d[f.key].kg   = addMode ? (n(d[f.key].kg)+n(v.kg)) : v.kg;
+    if(v.bags!=='' && v.bags!=null) d[f.key].bags = addMode ? (n(d[f.key].bags)+n(v.bags)) : v.bags;
+  });
+  delete ocrState[i];
+  save(); render();
+  alert('✅ डेटा फॉर्म में भर दिया गया। कृपया औसत/बैग जाँच लें।');
+}
+
+function restore(inp){
+  const f=inp.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{ try{ const o=JSON.parse(e.target.result);
+      if(confirm('मौजूदा डेटा में मर्ज करें? (Cancel = पूरी तरह बदलें)')) store=Object.assign(store,o); else store=o;
+      const ks=savedKeys(); curKey = ks.length?ks[ks.length-1]:curKey; save(); render();
+      alert('✅ बैकअप लोड हो गया।');
+    }catch(err){ alert('❌ फाइल पढ़ी नहीं जा सकी।'); } };
+  r.readAsText(f); inp.value='';
+}
+
+init();
+</script>
+</body>
+</html>
